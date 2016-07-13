@@ -11,7 +11,7 @@ app = Bottle()
 
 app_dir = os.path.dirname(os.path.abspath(__file__))
 
-dir_executables = os.path.join(app_dir, "executables", name)
+dir_executables = os.path.join(app_dir, "executables")
 
 BENCHMARKS = {
     "linpack": dir_executables + "linpackbm.jar",
