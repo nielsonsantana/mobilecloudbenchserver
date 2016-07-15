@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 import bottle
 from bottle import Bottle, redirect, route
 from bottle import template, SimpleTemplate
@@ -14,9 +15,9 @@ app_dir = os.path.dirname(os.path.abspath(__file__))
 dir_executables = os.path.join(app_dir, "executables")
 
 BENCHMARKS = {
-    "linpack": dir_executables + "linpackbm.jar",
-    "prime": dir_executables + "prime.jar",
-    "image": dir_executables + "prime.jar",
+    "linpack": os.path.join(dir_executables + "linpackbm.jar"),
+    "prime": os.path.join(dir_executables + "prime.jar"),
+    "image": os.path.join(dir_executables + "prime.jar"),
 }
 
 def execute_program(program, args):
@@ -25,10 +26,13 @@ def execute_program(program, args):
     stdout, stderr = p.communicate(input='passed_string')
     return stdout
 
-@app.hook('before_request')
+# @app.hook('before_request')
 def strip_path():
     request.environ['PATH_INFO'] = request.environ['PATH_INFO'].rstrip('/')
-    print(request.environ['PATH_INFO'])
+
+@app.get("/")
+def index():
+    return "MobileCloudBenchServer working"
 
 def get_executable_path(name):
     path = os.path.join(app_dir, "executables", name)
@@ -38,10 +42,18 @@ def get_executable_path(name):
 
 @app.get("/linpack")
 def run_linpack():
+    start_time = time.time()
     parameter = request.query.get('parameter', "")
+    send_time = long(request.query.get('send_time', 0))
+    request_time = start_time - send_time
+
     executable = get_executable_path("linpackbm.jar")
     out = execute_program(executable, [parameter])
-    return out
+    
+    process_time = time.time() - start_time
+    response = "%s, %s, %s, %s" % \
+                (out, str(request_time), str(process_time), time.time())
+    return response
 
 @app.post("/sorttext")
 def run_sorttext():
@@ -60,4 +72,5 @@ def run_sorttext():
 
 if __name__ == "__main__":
     bottle.debug(True)
-    bottle.run(app=app, host='localhost', port=5000, workers=4)
+    bottle.run(app=app, server="gunicorn", host='localhost', 
+        port=5000, workers=4, reload=True)

@@ -4,4 +4,4 @@ from app import app as application
 
 if __name__ == "__main__":
 	application.run(server='gunicorn', host='0.0.0.0', 
-    	port=int(os.environ.get("PORT", 9080)), debug=False, workers=4)
+    	port=int(os.environ.get("PORT", 5000)), debug=False, workers=4)
