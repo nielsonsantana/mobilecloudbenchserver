@@ -7,6 +7,7 @@ from bottle import template, SimpleTemplate
 from bottle import get, post, request, response
 from urlparse import urlparse
 from subprocess import Popen, PIPE, STDOUT
+from datetime import datetime
 
 app = Bottle()
 
@@ -30,6 +31,9 @@ def execute_program(program, args):
 def strip_path():
     request.environ['PATH_INFO'] = request.environ['PATH_INFO'].rstrip('/')
 
+
+current_milli_time = lambda: int(round(time.time() * 1000))
+
 @app.get("/")
 def index():
     return "MobileCloudBenchServer working"
@@ -45,14 +49,14 @@ def run_linpack():
     start_time = time.time()
     parameter = request.query.get('parameter', "")
     send_time = long(request.query.get('send_time', 0))
-    request_time = start_time - send_time
+    request_time = current_milli_time() - send_time
 
     executable = get_executable_path("linpackbm.jar")
     out = execute_program(executable, [parameter])
     
     process_time = time.time() - start_time
     response = "%s, %s, %s, %s" % \
-                (out, str(request_time), str(process_time), time.time())
+                (out, str(request_time), str(process_time), current_milli_time())
     return response
 
 @app.post("/sorttext")
