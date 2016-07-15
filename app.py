@@ -49,12 +49,12 @@ def run_linpack():
     start_time = time.time()
     parameter = request.query.get('parameter', "")
     send_time = long(request.query.get('send_time', 0))
-    request_time = current_milli_time() - send_time
+    request_time = int(current_milli_time() - send_time)
 
     executable = get_executable_path("linpackbm.jar")
     out = execute_program(executable, [parameter])
     
-    process_time = time.time() - start_time
+    process_time = int((time.time() - start_time) * 1000)
     response = "%s, %s, %s, %s" % \
                 (out, str(request_time), str(process_time), current_milli_time())
     return response
