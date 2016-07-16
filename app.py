@@ -8,6 +8,7 @@ from bottle import get, post, request, response
 from urlparse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 from datetime import datetime
+from functools import wraps
 
 app = Bottle()
 
@@ -44,26 +45,38 @@ def get_executable_path(name):
         return path
     return None
 
-@app.get("/linpack")
-def run_linpack():
-    start_time = time.time()
-    parameter = request.query.get('parameter', "")
-    send_time = long(request.query.get('send_time', 0))
-    request_time = int(current_milli_time() - send_time)
 
+def profile(fn):
+    @wraps(fn)
+    def with_profiling(*args, **kwargs):
+        start_time = time.time()
+        client_time = long(request.query.get('send_time', 0))
+        request_time = int(current_milli_time() - client_time)
+
+        ret = fn(*args, **kwargs)
+
+        elapsed_time = int((time.time() - start_time) * 1000)
+
+        response.set_header("request-time", str(request_time))
+        response.set_header("compute-time-server", str(elapsed_time))
+        return ret
+
+    return with_profiling
+
+@app.get("/linpack")
+@profile
+def run_linpack():
+    parameter = request.query.get('parameter', "")
     executable = get_executable_path("linpackbm.jar")
     out = execute_program(executable, [parameter])
-    
-    process_time = int((time.time() - start_time) * 1000)
-    
-    response.set_header("requesttime", str(request_time))
-    response.set_header("compute-time-server", str(process_time))
+
     return out
 
-@app.post("/sorttext")
-def run_sorttext():
-    parameter = request.forms.get('parameter', "")
-    executable = get_executable_path("sorttext.jar")
+@app.get("/primecalc")
+@profile
+def run_primecalc():
+    parameter = request.query.get('parameter', "")
+    executable = get_executable_path("primebm.jar")
     out = execute_program(executable, [parameter])
     return out
 
