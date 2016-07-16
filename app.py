@@ -57,7 +57,7 @@ def run_linpack():
     process_time = int((time.time() - start_time) * 1000)
     
     response.set_header("requesttime", str(request_time))
-    response.set_header("computetime", str(process_time))
+    response.set_header("compute-time-server", str(process_time))
     return out
 
 @app.post("/sorttext")
