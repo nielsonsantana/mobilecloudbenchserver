@@ -55,9 +55,10 @@ def run_linpack():
     out = execute_program(executable, [parameter])
     
     process_time = int((time.time() - start_time) * 1000)
-    response = "%s, %s, %s, %s" % \
-                (out, str(request_time), str(process_time), current_milli_time())
-    return response
+    
+    response.set_header("requesttime", str(request_time))
+    response.set_header("computetime", str(process_time))
+    return out
 
 @app.post("/sorttext")
 def run_sorttext():
@@ -77,4 +78,4 @@ def run_sorttext():
 if __name__ == "__main__":
     bottle.debug(True)
     bottle.run(app=app, server="gunicorn", host='localhost', 
-        port=5000, workers=4, reload=True)
+        port=5000, workers=4, reload=True, debug=True)
